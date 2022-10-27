@@ -15,6 +15,7 @@ import {
 import {Propietario} from '../models';
 import {PropietarioRepository} from '../repositories';
 import {AutenticacionService} from '../services/autenticacion.service';
+import fetch from 'cross-fetch';
 
 export class PropietarioController {
   constructor(
@@ -46,17 +47,12 @@ export class PropietarioController {
     // let clave = this.autenticacionService.generarClave();
     // propietario.clave = clave;
     propietario.clave = this.autenticacionService.cifrarClave(propietario.clave);
-    return this.propietarioRepository.create(propietario);
+    let prop = await this.propietarioRepository.create(propietario);
 
-
-    //notificar al usuario por correo electronico que ya esta registrado en la plataforma
-    // ms-notifiaciones  => microservicio notificaciones<
-    /*
-      1. instalar fetch   => ( cross-fetch )
-      2. consumir el servicio por medio de fetch('url del servicio de notificaciones (data) )
-
-    */
-
+    fetch('http://localhost:5000/enviar-correo?mensaje=Inscripción al sistema Inmobiliario&asunto=Inscrito al sistema InmoAPi&correo=' + prop.correo)
+      .then ( (response) => console.log(`Propietario inscriuto en el sistema ${prop.correo}` ));
+   
+    return prop;
   }
 
   @get('/propietarios/count')
