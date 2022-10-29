@@ -1,30 +1,30 @@
+import {authenticate} from '@loopback/authentication';
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
   Filter,
   FilterExcludingWhere,
   repository,
-  Where,
+  Where
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  del, get,
+  getModelSchemaRef, param, patch, post, put, requestBody,
+  response
 } from '@loopback/rest';
 import {Inmueble} from '../models';
 import {InmuebleRepository} from '../repositories';
+import {InmuebleService} from '../services/inmueble.service';
 
+@authenticate("admin")
 export class InmuebleController {
   constructor(
     @repository(InmuebleRepository)
-    public inmuebleRepository : InmuebleRepository,
-  ) {}
+    public inmuebleRepository: InmuebleRepository,
+    @service(InmuebleService)
+    public inmuebleService: InmuebleService,
+  ) { }
 
   @post('/inmuebles')
   @response(200, {
@@ -47,6 +47,23 @@ export class InmuebleController {
     return this.inmuebleRepository.create(inmueble);
   }
 
+  @authenticate.skip()
+  @get('/inmuebles-disponibles')
+  @response(200, {
+    description: 'Array of Inmueble model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Inmueble, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async inmueblesDisponiblesParaArriendo(): Promise<Inmueble[]> {
+    return this.inmuebleService.getInmueblesDisponibles();
+  }
+
   @get('/inmuebles/count')
   @response(200, {
     description: 'Inmueble model count',
@@ -58,6 +75,7 @@ export class InmuebleController {
     return this.inmuebleRepository.count(where);
   }
 
+  @authenticate.skip()   // permito el acceso a cualquier usuario
   @get('/inmuebles')
   @response(200, {
     description: 'Array of Inmueble model instances',
